@@ -1,3 +1,4 @@
+# AI clarifies: In this project, GitHub Colpiolt was used as a code completion tool.
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -124,6 +125,9 @@ def main():
     plot_potential(charges2, xgrid, ygrid, title='HW2: Dipole')
 
     # HW3: Two Dipoles
+    # This figure shows the potential produced by two dipoles placed on the x-axis.
+    # The pattern illustrates regions where contributions from different charges 
+    # reinforce or cancel create a more complicated potential landscape than a single dipole.
     charges3 = [
         Charge(-10, 0, +1),
         Charge(-4, 0, -1),
@@ -137,6 +141,15 @@ def main():
         charges2, xgrid, ygrid,
         'HW4: Electric Field Direction from Dipole Potential'
     )
+
+    # HW5: Reflection
+    # The potential method is simpler because potential is a scalar, so contributions from multiple
+    # charges add directly as numbers. The electric field is a vector, so each charge’s
+    # field must be split into components and added carefully with direction.
+
+    # A weakness of the potential method here is that the electric field is obtained numerically by
+    # taking the gradient of the potential, which introduces numerical error, especially near the
+    # charge locations where the potential changes very fast.
 
     plt.show()
 
