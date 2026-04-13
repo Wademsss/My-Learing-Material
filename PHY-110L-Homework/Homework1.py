@@ -41,6 +41,19 @@ def finite_contour_levels(V, num_levels=10):
 
     return levels
 
+def electric_field_from_potential(V):
+    # np.gradient returns [dV/dy, dV/dx]
+    dV_dy, dV_dx = np.gradient(V)
+    Ex = -dV_dx
+    Ey = -dV_dy
+    return Ex, Ey
+
+
+def field_direction_degrees(Ex, Ey):
+    theta = np.degrees(np.arctan2(Ey, Ex))
+    theta = (theta + 360) % 360
+    return theta
+
 # Plot helpers
 def plot_potential(charges, xgrid, ygrid, title):
         V = total_potential(charges, xgrid, ygrid)
@@ -72,6 +85,32 @@ def plot_potential(charges, xgrid, ygrid, title):
         plt.tight_layout()
         return V
 
+def plot_field_direction_from_potential(charges, xgrid, ygrid, title):
+    V = total_potential(charges, xgrid, ygrid)
+    Ex, Ey = electric_field_from_potential(V)
+    theta = field_direction_degrees(Ex, Ey)
+
+    plt.figure(figsize=(7, 6))
+    plt.imshow(
+        theta,
+        origin='lower',
+        extent=[xgrid.min(), xgrid.max(), ygrid.min(), ygrid.max()],
+        cmap='hsv',
+        vmin=0,
+        vmax=360
+    )
+    plt.colorbar(label='Field direction (degrees)')
+
+    for c in charges:
+        marker = 'o' if c.q > 0 else 'x'
+        plt.scatter(c.x, c.y, marker=marker, s=100)
+
+    plt.gca().set_aspect('equal')
+    plt.xlabel('x')
+    plt.ylabel('y')
+    plt.title(title)
+    plt.tight_layout()
+
 # Main
 def main():
     xgrid, ygrid = make_grid()
@@ -83,6 +122,21 @@ def main():
     # HW2: Dipole
     charges2 = [Charge(-3.5, 0, +1), Charge(3.5, 0, -1)]
     plot_potential(charges2, xgrid, ygrid, title='HW2: Dipole')
+
+    # HW3: Two Dipoles
+    charges3 = [
+        Charge(-10, 0, +1),
+        Charge(-4, 0, -1),
+        Charge(4, 0, +1),
+        Charge(10, 0, -1)
+    ]
+    plot_potential(charges3, xgrid, ygrid, 'HW3: Two Dipoles Arrangement')
+
+    # HW4: E field direction from dipole potential
+    plot_field_direction_from_potential(
+        charges2, xgrid, ygrid,
+        'HW4: Electric Field Direction from Dipole Potential'
+    )
 
     plt.show()
 
