@@ -10,6 +10,7 @@
       <TargetName>Target 1</TargetName>
       <ToolsetNumber>0x4</ToolsetNumber>
       <ToolsetName>ARM-ADS</ToolsetName>
+      <pCCUsed>5060528::V5.06 update 5 (build 528)::ARMCC</pCCUsed>
       <uAC6>0</uAC6>
       <TargetOption>
         <TargetCommonOption>
@@ -47,14 +48,14 @@
             <NotGenerated>0</NotGenerated>
             <InvalidFlash>1</InvalidFlash>
           </TargetStatus>
-          <OutputDirectory>.\</OutputDirectory>
+          <OutputDirectory>.\Objects\</OutputDirectory>
           <OutputName>stm32-learing-project</OutputName>
           <CreateExecutable>1</CreateExecutable>
           <CreateLib>0</CreateLib>
           <CreateHexFile>0</CreateHexFile>
           <DebugInformation>1</DebugInformation>
           <BrowseInformation>1</BrowseInformation>
-          <ListingPath>.\</ListingPath>
+          <ListingPath>.\Listings\</ListingPath>
           <HexFormatSelection>1</HexFormatSelection>
           <Merge32K>0</Merge32K>
           <CreateBatchFile>0</CreateBatchFile>
@@ -125,47 +126,6 @@
             <HexOffset>0</HexOffset>
             <Oh166RecLen>16</Oh166RecLen>
           </OPTHX>
-          <Simulator>
-            <UseSimulator>0</UseSimulator>
-            <LoadApplicationAtStartup>1</LoadApplicationAtStartup>
-            <RunToMain>1</RunToMain>
-            <RestoreBreakpoints>1</RestoreBreakpoints>
-            <RestoreWatchpoints>1</RestoreWatchpoints>
-            <RestoreMemoryDisplay>1</RestoreMemoryDisplay>
-            <RestoreFunctions>1</RestoreFunctions>
-            <RestoreToolbox>1</RestoreToolbox>
-            <LimitSpeedToRealTime>0</LimitSpeedToRealTime>
-            <RestoreSysVw>1</RestoreSysVw>
-          </Simulator>
-          <Target>
-            <UseTarget>1</UseTarget>
-            <LoadApplicationAtStartup>1</LoadApplicationAtStartup>
-            <RunToMain>1</RunToMain>
-            <RestoreBreakpoints>1</RestoreBreakpoints>
-            <RestoreWatchpoints>1</RestoreWatchpoints>
-            <RestoreMemoryDisplay>1</RestoreMemoryDisplay>
-            <RestoreFunctions>0</RestoreFunctions>
-            <RestoreToolbox>1</RestoreToolbox>
-            <RestoreTracepoints>1</RestoreTracepoints>
-            <RestoreSysVw>1</RestoreSysVw>
-          </Target>
-          <RunDebugAfterBuild>0</RunDebugAfterBuild>
-          <TargetSelection>0</TargetSelection>
-          <SimDlls>
-            <CpuDll></CpuDll>
-            <CpuDllArguments></CpuDllArguments>
-            <PeripheralDll></PeripheralDll>
-            <PeripheralDllArguments></PeripheralDllArguments>
-            <InitializationFile></InitializationFile>
-          </SimDlls>
-          <TargetDlls>
-            <CpuDll></CpuDll>
-            <CpuDllArguments></CpuDllArguments>
-            <PeripheralDll></PeripheralDll>
-            <PeripheralDllArguments></PeripheralDllArguments>
-            <InitializationFile></InitializationFile>
-            <Driver>BIN\UL2CM3.DLL</Driver>
-          </TargetDlls>
         </DebugOption>
         <Utilities>
           <Flash1>
@@ -297,17 +257,17 @@
                 <Size>0x0</Size>
               </XRAM>
               <OCR_RVCT1>
-                <Type>0</Type>
+                <Type>1</Type>
                 <StartAddress>0x0</StartAddress>
                 <Size>0x0</Size>
               </OCR_RVCT1>
               <OCR_RVCT2>
-                <Type>0</Type>
+                <Type>1</Type>
                 <StartAddress>0x0</StartAddress>
                 <Size>0x0</Size>
               </OCR_RVCT2>
               <OCR_RVCT3>
-                <Type>0</Type>
+                <Type>1</Type>
                 <StartAddress>0x0</StartAddress>
                 <Size>0x0</Size>
               </OCR_RVCT3>
@@ -317,7 +277,7 @@
                 <Size>0x10000</Size>
               </OCR_RVCT4>
               <OCR_RVCT5>
-                <Type>0</Type>
+                <Type>1</Type>
                 <StartAddress>0x0</StartAddress>
                 <Size>0x0</Size>
               </OCR_RVCT5>
@@ -374,9 +334,9 @@
             <v6Rtti>0</v6Rtti>
             <VariousControls>
               <MiscControls></MiscControls>
-              <Define></Define>
+              <Define>USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath></IncludePath>
+              <IncludePath>.\Startup;.\User;.\Library</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -418,10 +378,308 @@
       </TargetOption>
       <Groups>
         <Group>
-          <GroupName>Source Group 1</GroupName>
+          <GroupName>Startup</GroupName>
+          <Files>
+            <File>
+              <FileName>startup_stm32f10x_md.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>.\Startup\startup_stm32f10x_md.s</FilePath>
+            </File>
+            <File>
+              <FileName>core_cm3.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Startup\core_cm3.c</FilePath>
+            </File>
+            <File>
+              <FileName>core_cm3.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Startup\core_cm3.h</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Startup\stm32f10x.h</FilePath>
+            </File>
+            <File>
+              <FileName>system_stm32f10x.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Startup\system_stm32f10x.c</FilePath>
+            </File>
+            <File>
+              <FileName>system_stm32f10x.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Startup\system_stm32f10x.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Library</GroupName>
+          <Files>
+            <File>
+              <FileName>misc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Library\misc.c</FilePath>
+            </File>
+            <File>
+              <FileName>misc.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Library\misc.h</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_adc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Library\stm32f10x_adc.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_adc.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Library\stm32f10x_adc.h</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_bkp.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Library\stm32f10x_bkp.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_bkp.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Library\stm32f10x_bkp.h</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_can.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Library\stm32f10x_can.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_can.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Library\stm32f10x_can.h</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_cec.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Library\stm32f10x_cec.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_cec.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Library\stm32f10x_cec.h</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_crc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Library\stm32f10x_crc.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_crc.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Library\stm32f10x_crc.h</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_dac.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Library\stm32f10x_dac.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_dac.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Library\stm32f10x_dac.h</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_dbgmcu.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Library\stm32f10x_dbgmcu.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_dbgmcu.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Library\stm32f10x_dbgmcu.h</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_dma.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Library\stm32f10x_dma.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_dma.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Library\stm32f10x_dma.h</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_exti.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Library\stm32f10x_exti.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_exti.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Library\stm32f10x_exti.h</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_flash.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Library\stm32f10x_flash.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_flash.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Library\stm32f10x_flash.h</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_fsmc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Library\stm32f10x_fsmc.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_fsmc.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Library\stm32f10x_fsmc.h</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_gpio.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Library\stm32f10x_gpio.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_gpio.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Library\stm32f10x_gpio.h</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_i2c.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Library\stm32f10x_i2c.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_i2c.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Library\stm32f10x_i2c.h</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_iwdg.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Library\stm32f10x_iwdg.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_iwdg.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Library\stm32f10x_iwdg.h</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_pwr.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Library\stm32f10x_pwr.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_pwr.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Library\stm32f10x_pwr.h</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_rcc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Library\stm32f10x_rcc.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_rcc.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Library\stm32f10x_rcc.h</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_rtc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Library\stm32f10x_rtc.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_rtc.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Library\stm32f10x_rtc.h</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_sdio.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Library\stm32f10x_sdio.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_sdio.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Library\stm32f10x_sdio.h</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_spi.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Library\stm32f10x_spi.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_spi.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Library\stm32f10x_spi.h</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_tim.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Library\stm32f10x_tim.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_tim.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Library\stm32f10x_tim.h</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_usart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Library\stm32f10x_usart.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_usart.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Library\stm32f10x_usart.h</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_wwdg.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Library\stm32f10x_wwdg.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_wwdg.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Library\stm32f10x_wwdg.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>User</GroupName>
+          <Files>
+            <File>
+              <FileName>main.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\User\main.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_conf.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\User\stm32f10x_conf.h</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_it.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\User\stm32f10x_it.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_it.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\User\stm32f10x_it.h</FilePath>
+            </File>
+          </Files>
         </Group>
       </Groups>
     </Target>
   </Targets>
+
+  <RTE>
+    <apis/>
+    <components/>
+    <files/>
+  </RTE>
 
 </Project>
