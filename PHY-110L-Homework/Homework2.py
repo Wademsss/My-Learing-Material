@@ -207,25 +207,47 @@ def plot_fractional_error(error, title):
     plt.tight_layout()
 
 
-def plot_field_line_demo(charges, positive, negative, title, start_x, start_y, direction):
+def plot_field_lines(
+    charges,
+    positive,
+    negative,
+    start_points,
+    title
+):
     plt.figure(figsize=(7, 6))
 
-    if direction == 'withfield':
-        stop_charge = negative
-    else:
-        stop_charge = positive
+    for start in start_points:
+        start_x = start[0]
+        start_y = start[1]
+        direction = start[2]
+        stop_charge = start[3]
 
-    trace_field_line(
-        charges,
-        start_x,
-        start_y,
-        stop_charge.x,
-        stop_charge.y,
-        direction=direction
+        trace_field_line(
+            charges,
+            start_x,
+            start_y,
+            stop_charge.x,
+            stop_charge.y,
+            direction=direction
+        )
+
+    plt.scatter(
+        positive.x,
+        positive.y,
+        color='red',
+        s=220,
+        edgecolors='black',
+        zorder=5
     )
 
-    plt.scatter(positive.x, positive.y, color='red', s=200, edgecolors='black', zorder=5)
-    plt.scatter(negative.x, negative.y, color='blue', s=200, edgecolors='black', zorder=5)
+    plt.scatter(
+        negative.x,
+        negative.y,
+        color='blue',
+        s=220,
+        edgecolors='black',
+        zorder=5
+    )
 
     plt.xlim(-25, 25)
     plt.ylim(-25, 25)
@@ -235,34 +257,29 @@ def plot_field_line_demo(charges, positive, negative, title, start_x, start_y, d
     plt.title(title)
     plt.tight_layout()
 
+def make_start_points_from_charge(
+    source_charge,
+    target_charge,
+    number_of_lines=16,
+    launch_radius=0.8
+):
+    start_points = []
 
-def plot_final_field_lines(charges, positive, negative):
-    plt.figure(figsize=(8, 8))
+    angles = np.linspace(0, 2*np.pi, number_of_lines, endpoint=False)
+    angles = angles + np.pi / number_of_lines
 
-    launch_lines_from_charge(
-        charges,
-        source_charge=positive,
-        target_charge=negative,
-        number_of_lines=8
-    )
+    for theta in angles:
+        x0 = source_charge.x + launch_radius * np.cos(theta)
+        y0 = source_charge.y + launch_radius * np.sin(theta)
 
-    launch_lines_from_charge(
-        charges,
-        source_charge=negative,
-        target_charge=positive,
-        number_of_lines=8
-    )
+        if source_charge.q > 0:
+            direction = 'withfield'
+        else:
+            direction = 'againstfield'
 
-    plt.scatter(positive.x, positive.y, color='red', s=280, edgecolors='black', zorder=5)
-    plt.scatter(negative.x, negative.y, color='blue', s=280, edgecolors='black', zorder=5)
+        start_points.append((x0, y0, direction, target_charge))
 
-    plt.xlim(-25, 25)
-    plt.ylim(-25, 25)
-    plt.gca().set_aspect('equal')
-    plt.xlabel('x')
-    plt.ylabel('y')
-    plt.title('HW4: Dipole Field Lines')
-    plt.tight_layout()
+    return start_points
 
 # Main
 def main():
@@ -304,37 +321,37 @@ def main():
     print()
 
     # HW3(a): Launch from positive charge toward negative charge
-    plot_field_line_demo(
+    plot_field_lines(
         charges,
         positive,
         negative,
-        title='HW3(a): Line from Positive Charge Toward Negative Charge',
-        start_x=positive.x + 0.8,
-        start_y=positive.y,
-        direction='withfield'
+        start_points=[
+            (positive.x + 0.8, positive.y, 'withfield', negative)
+        ],
+        title='HW3(a): Line from Positive Charge Toward Negative Charge'
     )
 
     # HW3(b): Launch from negative charge toward positive charge
-    plot_field_line_demo(
+    plot_field_lines(
         charges,
         positive,
         negative,
-        title='HW3(b): Line from Negative Charge Toward Positive Charge',
-        start_x=negative.x - 0.8,
-        start_y=negative.y,
-        direction='againstfield'
+        start_points=[
+            (negative.x - 0.8, negative.y, 'againstfield', positive)
+        ],
+        title='HW3(b): Line from Negative Charge Toward Positive Charge'
     )
 
     # HW3(c): Launch from positive charge perpendicular to dipole axis
-    plot_field_line_demo(
+    plot_field_lines(
         charges,
         positive,
         negative,
-        title='HW3(c): Line from Positive Charge Perpendicular to Dipole Axis',
-        start_x=positive.x,
-        start_y=positive.y + 0.8,
-        direction='withfield'
-    )
+        start_points=[
+            (positive.x, positive.y + 0.8, 'withfield', negative)
+        ],
+        title='HW3(c): Line from Positive Charge Perpendicular to Dipole Axis'
+    )   
 
     # HW3(d): Reflection
     print("HW3(d):")
@@ -344,7 +361,20 @@ def main():
     print()
 
     # HW4: Final field line figure
-    plot_final_field_lines(charges, positive, negative)
+    start_points_hw4 = make_start_points_from_charge(
+        source_charge=positive,
+        target_charge=negative,
+        number_of_lines=16,
+        launch_radius=0.8
+    )
+
+    plot_field_lines(
+        charges,
+        positive,
+        negative,
+        start_points=start_points_hw4,
+        title='HW4: Dipole Field Lines'
+    )
 
     plt.show()
 
