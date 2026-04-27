@@ -113,17 +113,7 @@ def fractional_error(approx, true):
     return error
 
 # Field line helpers
-def trace_field_line(
-    charges,
-    x0,
-    y0,
-    stop_x,
-    stop_y,
-    step=0.35,
-    stop_radius=0.8,
-    max_steps=3000,
-    direction='withfield'
-):
+def trace_field_line(charges, x0, y0, stop_x, stop_y, step=0.35, stop_radius=0.8, max_steps=3000, direction='withfield'):
     x = x0
     y = y0
 
@@ -160,13 +150,7 @@ def trace_field_line(
             break
 
 
-def launch_lines_from_charge(
-    charges,
-    source_charge,
-    target_charge,
-    number_of_lines=8,
-    launch_radius=0.8
-):
+def launch_lines_from_charge( charges, source_charge, target_charge, number_of_lines=8, launch_radius=0.8):
     angles = np.linspace(0, 2*np.pi, number_of_lines, endpoint=False)
 
     # offset angle to avoid launching exactly along axes
@@ -181,14 +165,7 @@ def launch_lines_from_charge(
         else:
             direction = 'againstfield'
 
-        trace_field_line(
-            charges,
-            x0,
-            y0,
-            target_charge.x,
-            target_charge.y,
-            direction=direction
-        )
+        trace_field_line(charges, x0, y0, target_charge.x, target_charge.y, direction=direction)
 
 # Plot helpers
 def plot_fractional_error(error, title):
@@ -207,13 +184,7 @@ def plot_fractional_error(error, title):
     plt.tight_layout()
 
 
-def plot_field_lines(
-    charges,
-    positive,
-    negative,
-    start_points,
-    title
-):
+def plot_field_lines(charges, positive, negative, start_points, title):
     plt.figure(figsize=(7, 6))
 
     for start in start_points:
@@ -231,23 +202,9 @@ def plot_field_lines(
             direction=direction
         )
 
-    plt.scatter(
-        positive.x,
-        positive.y,
-        color='red',
-        s=220,
-        edgecolors='black',
-        zorder=5
-    )
+    plt.scatter(positive.x, positive.y, color='red', s=220, edgecolors='black', zorder=5)
 
-    plt.scatter(
-        negative.x,
-        negative.y,
-        color='blue',
-        s=220,
-        edgecolors='black',
-        zorder=5
-    )
+    plt.scatter(negative.x, negative.y, color='blue', s=220, edgecolors='black', zorder=5)
 
     plt.xlim(-25, 25)
     plt.ylim(-25, 25)
@@ -257,16 +214,11 @@ def plot_field_lines(
     plt.title(title)
     plt.tight_layout()
 
-def make_start_points_from_charge(
-    source_charge,
-    target_charge,
-    number_of_lines=16,
-    launch_radius=0.8
-):
+def make_start_points_from_charge(source_charge, target_charge, number_of_lines, launch_radius, angle_offset):
     start_points = []
 
     angles = np.linspace(0, 2*np.pi, number_of_lines, endpoint=False)
-    angles = angles + np.pi / number_of_lines
+    angles = angles + angle_offset
 
     for theta in angles:
         x0 = source_charge.x + launch_radius * np.cos(theta)
@@ -283,6 +235,8 @@ def make_start_points_from_charge(
 
 # Main
 def main():
+
+    # Set up
     xgrid, ygrid = make_grid()
 
     positive = Charge(-7, 0, +1)
@@ -291,7 +245,7 @@ def main():
 
     V = total_potential(charges, xgrid, ygrid)
 
-    # HW1: Computing the gradient yourself
+    # HW1
     my_Ex, my_Ey = my_centered_difference_field(V)
     np_Ex, np_Ey = electric_field_from_potential(V)
 
@@ -305,7 +259,7 @@ def main():
     print("Maximum difference in Ey:", diff_Ey)
     print()
 
-    # HW2: Calculate the field yourself and fractional error
+    # HW2
     true_Ex, true_Ey = total_field(charges, xgrid, ygrid)
 
     error_Ex = fractional_error(my_Ex, true_Ex)
@@ -315,12 +269,12 @@ def main():
     plot_fractional_error(error_Ey, 'HW2: Fractional Error in Ey')
 
     print("HW2: Fractional error")
-    print("Max |fractional error Ex|:", np.nanmax(np.abs(error_Ex)))
-    print("Max |fractional error Ey|:", np.nanmax(np.abs(error_Ey)))
+    print("Max fractional error Ex:", np.nanmax(np.abs(error_Ex)))
+    print("Max fractional error Ey:", np.nanmax(np.abs(error_Ey)))
     print("These errors are much larger than machine precision, about 1e-16.")
     print()
 
-    # HW3(a): Launch from positive charge toward negative charge
+    # HW3(a)
     plot_field_lines(
         charges,
         positive,
@@ -331,7 +285,7 @@ def main():
         title='HW3(a): Line from Positive Charge Toward Negative Charge'
     )
 
-    # HW3(b): Launch from negative charge toward positive charge
+    # HW3(b)
     plot_field_lines(
         charges,
         positive,
@@ -342,7 +296,7 @@ def main():
         title='HW3(b): Line from Negative Charge Toward Positive Charge'
     )
 
-    # HW3(c): Launch from positive charge perpendicular to dipole axis
+    # HW3(c)
     plot_field_lines(
         charges,
         positive,
@@ -353,20 +307,31 @@ def main():
         title='HW3(c): Line from Positive Charge Perpendicular to Dipole Axis'
     )   
 
-    # HW3(d): Reflection
-    print("HW3(d):")
-    print("A field line is not the same as the trajectory of a charged particle.")
-    print("A field line only shows the direction of the electric field at each point.")
-    print("A particle trajectory depends on force, acceleration, mass, charge, and initial velocity.")
-    print()
+    # HW3(d)
 
-    # HW4: Final field line figure
-    start_points_hw4 = make_start_points_from_charge(
+    # Field lines are geometric curves that show the direction of the electric field, while the 
+    # trajectory of a charged particle is determined by Newton’s law F=qE=ma and depends on the 
+    # particle’s mass, charge, and initial velocity, so a particle does not generally move along 
+    # a field line.
+
+
+    # HW4
+    # Positive charge
+    positive_start_points = make_start_points_from_charge(
         source_charge=positive,
         target_charge=negative,
-        number_of_lines=16,
-        launch_radius=0.8
+        number_of_lines=8,
+        launch_radius=0.8,
+        angle_offset=np.pi / 8
     )
+
+    # Negative charge
+    negative_start_points = [
+        (negative.x + 0.8, negative.y + 0.4, 'againstfield', positive),
+        (negative.x + 0.8, negative.y - 0.4, 'againstfield', positive),
+    ]
+
+    start_points_hw4 = positive_start_points + negative_start_points
 
     plot_field_lines(
         charges,
