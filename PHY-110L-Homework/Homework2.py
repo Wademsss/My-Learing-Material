@@ -168,6 +168,64 @@ def launch_lines_from_charge( charges, source_charge, target_charge, number_of_l
         trace_field_line(charges, x0, y0, target_charge.x, target_charge.y, direction=direction)
 
 # Plot helpers
+# HW1 Part
+def plot_potential(charges, xgrid, ygrid, title):
+        V = total_potential(charges, xgrid, ygrid)
+
+        plt.figure(figsize=(7, 6))
+        plt.imshow(
+            V,
+            origin='lower',
+            extent=[xgrid.min(), xgrid.max(), ygrid.min(), ygrid.max()]
+        )
+        plt.colorbar(label='Potential V')
+
+        levels = finite_contour_levels(V, num_levels=10)
+        plt.contour(
+            xgrid, ygrid, V,
+            levels=levels,
+            colors='black',
+            linewidths=0.8
+        )
+
+        for c in charges:
+            marker = 'o' if c.q > 0 else 'x'
+            plt.scatter(c.x, c.y, marker=marker, s=100)
+
+        plt.gca().set_aspect('equal')
+        plt.xlabel('x')
+        plt.ylabel('y')
+        plt.title(title)
+        plt.tight_layout()
+        return V
+
+def plot_field_direction_from_potential(charges, xgrid, ygrid, title):
+    V = total_potential(charges, xgrid, ygrid)
+    Ex, Ey = electric_field_from_potential(V)
+    theta = field_direction_degrees(Ex, Ey)
+
+    plt.figure(figsize=(7, 6))
+    plt.imshow(
+        theta,
+        origin='lower',
+        extent=[xgrid.min(), xgrid.max(), ygrid.min(), ygrid.max()],
+        cmap='hsv',
+        vmin=0,
+        vmax=360
+    )
+    plt.colorbar(label='Field direction (degrees)')
+
+    for c in charges:
+        marker = 'o' if c.q > 0 else 'x'
+        plt.scatter(c.x, c.y, marker=marker, s=100)
+
+    plt.gca().set_aspect('equal')
+    plt.xlabel('x')
+    plt.ylabel('y')
+    plt.title(title)
+    plt.tight_layout()
+    
+# HW2 Part
 def plot_fractional_error(error, title):
     plt.figure(figsize=(7, 6))
     plt.imshow(
@@ -342,7 +400,6 @@ def main():
     )
 
     plt.show()
-
 
 if __name__ == "__main__":
     main()
