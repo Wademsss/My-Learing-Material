@@ -13,8 +13,9 @@ def make_grid(n=51, xmin=-25, xmax=25, ymin=-25, ymax=25):
     return xgrid, ygrid
 
 
-
+# ============================================================
 # Charge class
+# ============================================================
 class Charge:
     def __init__(self, x, y, q):
         self.x = x
@@ -36,8 +37,9 @@ class Charge:
             Ey = self.q * dy / (r ** 3)
         return Ex, Ey
 
+# ============================================================
 # Physics helpers
-
+# ============================================================
 # HW1 Part
 def total_potential(charges, xgrid, ygrid):
     Vtotal = np.zeros_like(xgrid, dtype=float)
@@ -112,7 +114,9 @@ def fractional_error(approx, true):
 
     return error
 
+# ============================================================
 # Field line helpers
+# ============================================================
 def trace_field_line(charges, x0, y0, stop_x, stop_y, step=0.35, stop_radius=0.8, max_steps=3000, direction='withfield'):
     x = x0
     y = y0
@@ -167,7 +171,9 @@ def launch_lines_from_charge( charges, source_charge, target_charge, number_of_l
 
         trace_field_line(charges, x0, y0, target_charge.x, target_charge.y, direction=direction)
 
+# ============================================================
 # Plot helpers
+# ============================================================
 # HW1 Part
 def plot_potential(charges, xgrid, ygrid, title):
         V = total_potential(charges, xgrid, ygrid)
@@ -291,7 +297,9 @@ def make_start_points_from_charge(source_charge, target_charge, number_of_lines,
 
     return start_points
 
+# ============================================================
 # Main
+# ============================================================
 def main():
 
     # Set up

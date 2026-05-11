@@ -487,7 +487,9 @@ def plot_one_equipotential(dipole, positive, negative, start_points):
     setup_axes(ax, 'HW3: One Equipotential')
     fig.tight_layout()
 
-### Main
+# ============================================================
+# Main
+# ============================================================
 def main():
 
     # Set up

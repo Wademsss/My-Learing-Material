@@ -5,14 +5,18 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+# ============================================================
 # Grid setup
+# ============================================================
 def make_grid(n=51, xmin=-25, xmax=25, ymin=-25, ymax=25):
     coords = np.mgrid[ymin:ymax+1, xmin:xmax+1]
     ygrid = coords[0, :, :]
     xgrid = coords[1, :, :]
     return xgrid, ygrid
 
+# ============================================================
 # Charge class
+# ============================================================
 class Charge:
     def __init__(self, x, y, q):
         self.x = x
@@ -24,8 +28,10 @@ class Charge:
         with np.errstate(divide='ignore', invalid='ignore'):
             V = self.q / r
         return V
-    
+
+# ============================================================    
 # Physics helpers
+# ============================================================
 def total_potential(charges, xgrid, ygrid):
     Vtotal = np.zeros_like(xgrid, dtype=float)
     for c in charges:
@@ -58,7 +64,9 @@ def field_direction_degrees(Ex, Ey):
     theta = (theta + 360) % 360
     return theta
 
+# ============================================================
 # Plot helpers
+# ============================================================
 def plot_potential(charges, xgrid, ygrid, title):
         V = total_potential(charges, xgrid, ygrid)
 
@@ -115,7 +123,9 @@ def plot_field_direction_from_potential(charges, xgrid, ygrid, title):
     plt.title(title)
     plt.tight_layout()
 
+# ============================================================
 # Main
+# ============================================================
 def main():
     xgrid, ygrid = make_grid()
 
