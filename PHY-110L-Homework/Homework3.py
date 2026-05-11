@@ -6,9 +6,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-
-
-
 # ============================================================
 # Charge class
 # ============================================================
@@ -122,13 +119,17 @@ def apply_direction(vector, direction):
         return -ux, -uy
     return ux, uy
 
-def unit_equipotential_direction(charges, x, y):
+def unit_equipotential_direction(charges, x, y, side=1):
     field_direction = unit_field(charges, x, y)
     if field_direction is None:
         return None
 
     ux, uy = field_direction
-    return -uy, ux       # rotate electric field direction by 90 degrees
+
+    if side == 1:
+        return -uy, ux      # rotate +90 degrees
+    else:
+        return uy, -ux      # rotate -90 degrees
 
 # Euler and RK2 steps
 def euler_step(charges, x, y, h, direction='withfield'):
@@ -159,8 +160,8 @@ def rk2_step(charges, x, y, h, direction='withfield'):
     return x + h * ux2, y + h * uy2
 
 
-def rk2_equipotential_step(charges, x, y, h):
-    vector = unit_equipotential_direction(charges, x, y)
+def rk2_equipotential_step(charges, x, y, h, side=1):
+    vector = unit_equipotential_direction(charges, x, y, side=side)
     if vector is None:
         return None
 
@@ -169,7 +170,7 @@ def rk2_equipotential_step(charges, x, y, h):
     xm = x + 0.5 * h * ux1
     ym = y + 0.5 * h * uy1
 
-    midpoint_vector = unit_equipotential_direction(charges, xm, ym)
+    midpoint_vector = unit_equipotential_direction(charges, xm, ym, side=side)
     if midpoint_vector is None:
         return None
 
@@ -191,16 +192,36 @@ def make_start_points_from_charge(source_charge, number_of_lines=8, launch_radiu
 
     return start_points
 
-def find_equipotential_start_points(charges, levels, x_min=-6.5, x_max=6.5, y=1.0, num_points=1000):
+def find_equipotential_start_points(
+    charges,
+    levels,
+    x_min=-6.5,
+    x_max=6.5,
+    y=3.0,
+    num_points=2000
+):
     xline = np.linspace(x_min, x_max, num_points)
     potentials = total_potential(charges, xline, y)
+
     start_points = []
 
     for level in levels:
-        above = potentials > level
-        if np.any(above):
-            index = np.argmax(above)
-            start_points.append((xline[index], y, level))
+        diff = potentials - level
+
+        crossings = np.where(diff[:-1] * diff[1:] < 0)[0]
+
+        if len(crossings) > 0:
+            i = crossings[0]
+
+            # linear interpolation for better starting point
+            x1 = xline[i]
+            x2 = xline[i + 1]
+            v1 = diff[i]
+            v2 = diff[i + 1]
+
+            x_cross = x1 - v1 * (x2 - x1) / (v2 - v1)
+
+            start_points.append((x_cross, y, level))
 
     return start_points
 
@@ -288,37 +309,37 @@ def trace_equipotential(
     charges,
     x0,
     y0,
-    h=0.25,
-    max_steps=5000,
-    start_check_steps=100,
-    close_radius=0.15,
+    h=0.15,
+    max_steps=3000,
     bounds=(-25, 25, -25, 25),
     color='orange',
     linewidth=1.2,
 ):
-    x = float(x0)
-    y = float(y0)
-    xmin, xmax, ymin, ymax = bounds
+    for side in [1, -1]:
+        x = float(x0)
+        y = float(y0)
 
-    for step_index in range(max_steps):
-        next_point = rk2_equipotential_step(charges, x, y, h)
-        if next_point is None:
-            break
+        xs = [x]
+        ys = [y]
 
-        x_new, y_new = next_point
+        for _ in range(max_steps):
+            next_point = rk2_equipotential_step(charges, x, y, h, side=side)
 
-        outside = x_new < xmin or x_new > xmax or y_new < ymin or y_new > ymax
-        if outside:
-            # Re-enter from the opposite side without drawing a long artificial line across the plot.
-            x = np.clip(x_new, xmin, xmax)
-            y = np.clip(y_new, ymin, ymax)
-            continue
+            if next_point is None:
+                break
 
-        ax.plot([x, x_new], [y, y_new], color=color, linewidth=linewidth)
-        x, y = x_new, y_new
+            x_new, y_new = next_point
 
-        if step_index > start_check_steps and np.hypot(x - x0, y - y0) < close_radius:
-            break
+            xs.append(x_new)
+            ys.append(y_new)
+
+            x, y = x_new, y_new
+
+            # do not run forever
+            if abs(x) > 200 or abs(y) > 200:
+                break
+
+        ax.plot(xs, ys, color=color, linewidth=linewidth, clip_on=True)
 
 def draw_field_lines(ax, charges, start_points, h=0.3, method='rk2', stop_charge=None, color='black'):
     for x0, y0, direction in start_points:
@@ -429,14 +450,14 @@ def plot_field_lines_and_equipotentials(dipole, positive, negative):
     )
     draw_field_lines(ax, dipole, start_points, h=0.25, method='rk2', stop_charge=negative, color='black')
 
-    levels = [-0.12, -0.08, -0.05, 0.05, 0.08, 0.12]
+    levels = [-0.18, -0.12, -0.08, -0.05, 0.05, 0.08, 0.12, 0.18]
 
     equipotential_starts = find_equipotential_start_points(
         dipole,
         levels,
         x_min=-6.5,
         x_max=6.5,
-        y=1.0,
+        y=3.0,
     )
 
     for x0, y0, _ in equipotential_starts:
