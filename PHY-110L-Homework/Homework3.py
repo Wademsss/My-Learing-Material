@@ -258,7 +258,7 @@ def trace_field_line(
     xs = [x]
     ys = [y]
 
-    far_limit = 200   # 不要设 1000，太容易爆内存
+    far_limit = 1000  
 
     for _ in range(max_steps):
 
@@ -284,7 +284,7 @@ def trace_field_line(
         if abs(x) > far_limit or abs(y) > far_limit:
             break
 
-    # 一整条线只画一次
+    # Draw only one line per once
     ax.plot(xs, ys, color=color, linewidth=linewidth, clip_on=True)
 
 def launch_lines_from_charge( charges, source_charge, target_charge, number_of_lines=8, launch_radius=0.8):
