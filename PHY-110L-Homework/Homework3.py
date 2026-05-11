@@ -6,48 +6,42 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-### Grid setup
-def make_grid(n=51, xmin=-25, xmax=25, ymin=-25, ymax=25):
-    coords = np.mgrid[ymin:ymax+1, xmin:xmax+1]
-    ygrid = coords[0, :, :]
-    xgrid = coords[1, :, :]
-    return xgrid, ygrid
 
 
-### Charge class
+
+# ============================================================
+# Charge class
+# ============================================================
 class Charge:
     def __init__(self, x, y, q):
-        self.x = x
-        self.y = y
-        self.q = q
+        self.x = float(x)
+        self.y = float(y)
+        self.q = float(q)
 
-    def potential(self, xgrid, ygrid):
-        r = np.hypot(xgrid - self.x, ygrid - self.y)
+    def potential(self, x, y):
+        r = np.hypot(x - self.x, y - self.y)
         with np.errstate(divide='ignore', invalid='ignore'):
-            V = self.q / r
-        return V
+            return self.q / r
 
     def field(self, x, y):
         dx = x - self.x
         dy = y - self.y
         r = np.hypot(dx, dy)
+        with np.errstate(divide='ignore', invalid='ignore'):
+            ex = self.q * dx / r**3
+            ey = self.q * dy / r**3
+        return ex, ey
 
-        with np.errstate(divide="ignore", invalid="ignore"):
-            Ex = self.q * dx / (r ** 3)
-            Ey = self.q * dy / (r ** 3)
+# ============================================================
+# Physics helpers
+# ============================================================
 
-        return Ex, Ey
-
-### Physics helpers
-
-## HW1 Part
-def total_potential(charges, xgrid, ygrid):
-    Vtotal = np.zeros_like(xgrid, dtype=float)
-
-    for c in charges:
-        Vtotal += c.potential(xgrid, ygrid)
-
-    return Vtotal
+# HW1 Part
+def total_potential(charges, x, y):
+    total = np.zeros_like(np.asarray(x), dtype=float)
+    for charge in charges:
+        total += charge.potential(x, y)
+    return total
 
 def finite_contour_levels(V, num_levels=10):
     finite_vals = V[np.isfinite(V)]
@@ -76,15 +70,13 @@ def field_direction_degrees(Ex, Ey):
 
 ## HW2 Part
 def total_field(charges, x, y):
-    Ex_total = 0
-    Ey_total = 0
-
-    for c in charges:
-        Ex, Ey = c.field(x, y)
-        Ex_total += Ex
-        Ey_total += Ey
-
-    return Ex_total, Ey_total
+    ex_total = 0.0
+    ey_total = 0.0
+    for charge in charges:
+        ex, ey = charge.field(x, y)
+        ex_total += ex
+        ey_total += ey
+    return ex_total, ey_total
 
 def electric_field_from_potential(V):
     # np.gradient returns [dV/dy, dV/dx]
@@ -118,126 +110,159 @@ def fractional_error(approx, true):
 
 ## HW3 Part
 def unit_field(charges, x, y):
-    Ex, Ey = total_field(charges, x, y)
-    mag = np.hypot(Ex, Ey)
-
+    ex, ey = total_field(charges, x, y)
+    mag = np.hypot(ex, ey)
     if mag == 0 or not np.isfinite(mag):
         return None
+    return ex / mag, ey / mag
 
-    return Ex / mag, Ey / mag
-
+def apply_direction(vector, direction):
+    ux, uy = vector
+    if direction == 'againstfield':
+        return -ux, -uy
+    return ux, uy
 
 def unit_equipotential_direction(charges, x, y):
-    direction = unit_field(charges, x, y)
-
-    if direction is None:
+    field_direction = unit_field(charges, x, y)
+    if field_direction is None:
         return None
 
-    ux, uy = direction
-
-    # Rotate E direction by 90 degrees
-    return -uy, ux
+    ux, uy = field_direction
+    return -uy, ux       # rotate electric field direction by 90 degrees
 
 # Euler and RK2 steps
 def euler_step(charges, x, y, h, direction='withfield'):
-    direction_vector = unit_field(charges, x, y)
-
-    if direction_vector is None:
+    vector = unit_field(charges, x, y)
+    if vector is None:
         return None
 
-    ux, uy = direction_vector
-
-    if direction == 'againstfield':
-        ux = -ux
-        uy = -uy
-
+    ux, uy = apply_direction(vector, direction)
     return x + h * ux, y + h * uy
 
-def rk2_step(charges, x, y, h, direction='withfield'):
-    direction_vector = unit_field(charges, x, y)
 
-    if direction_vector is None:
+def rk2_step(charges, x, y, h, direction='withfield'):
+    vector = unit_field(charges, x, y)
+    if vector is None:
         return None
 
-    ux1, uy1 = direction_vector
+    ux1, uy1 = apply_direction(vector, direction)
 
-    if direction == 'againstfield':
-        ux1 = -ux1
-        uy1 = -uy1
-
-    # Midpoint
+    # Use a half Euler step to estimate the midpoint.
     xm = x + 0.5 * h * ux1
     ym = y + 0.5 * h * uy1
 
-    mid_direction = unit_field(charges, xm, ym)
-
-    if mid_direction is None:
+    midpoint_vector = unit_field(charges, xm, ym)
+    if midpoint_vector is None:
         return None
 
-    ux2, uy2 = mid_direction
-
-    if direction == 'againstfield':
-        ux2 = -ux2
-        uy2 = -uy2
-
+    ux2, uy2 = apply_direction(midpoint_vector, direction)
     return x + h * ux2, y + h * uy2
+
 
 def rk2_equipotential_step(charges, x, y, h):
-    direction_vector = unit_equipotential_direction(charges, x, y)
-
-    if direction_vector is None:
+    vector = unit_equipotential_direction(charges, x, y)
+    if vector is None:
         return None
 
-    ux1, uy1 = direction_vector
+    ux1, uy1 = vector
 
     xm = x + 0.5 * h * ux1
     ym = y + 0.5 * h * uy1
 
-    mid_direction = unit_equipotential_direction(charges, xm, ym)
-
-    if mid_direction is None:
+    midpoint_vector = unit_equipotential_direction(charges, xm, ym)
+    if midpoint_vector is None:
         return None
 
-    ux2, uy2 = mid_direction
-
+    ux2, uy2 = midpoint_vector
     return x + h * ux2, y + h * uy2
 
-### Field line helpers
-def trace_field_line(charges, x0, y0, stop_x, stop_y, step=0.35, stop_radius=0.8, max_steps=3000, direction='withfield'):
-    x = x0
-    y = y0
+# ============================================================
+# Starting points
+# ============================================================
+def make_start_points_from_charge(source_charge, number_of_lines=8, launch_radius=0.8, angle_offset=0):
+    start_points = []
+    angles = np.linspace(0, 2 * np.pi, number_of_lines, endpoint=False) + angle_offset
 
-    for i in range(max_steps):
-        Ex, Ey = total_field(charges, x, y)
+    for theta in angles:
+        x0 = source_charge.x + launch_radius * np.cos(theta)
+        y0 = source_charge.y + launch_radius * np.sin(theta)
+        direction = 'withfield' if source_charge.q > 0 else 'againstfield'
+        start_points.append((x0, y0, direction))
 
-        if not np.isfinite(Ex) or not np.isfinite(Ey):
+    return start_points
+
+def find_equipotential_start_points(charges, levels, x_min=-6.5, x_max=6.5, y=1.0, num_points=1000):
+    xline = np.linspace(x_min, x_max, num_points)
+    potentials = total_potential(charges, xline, y)
+    start_points = []
+
+    for level in levels:
+        above = potentials > level
+        if np.any(above):
+            index = np.argmax(above)
+            start_points.append((xline[index], y, level))
+
+    return start_points
+
+# ============================================================
+# Drawing helpers
+# ============================================================
+def setup_axes(ax, title, bounds=(-25, 25, -25, 25)):
+    xmin, xmax, ymin, ymax = bounds
+    ax.set_xlim(xmin, xmax)
+    ax.set_ylim(ymin, ymax)
+    ax.set_aspect('equal')
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
+    ax.set_title(title)
+
+def trace_field_line(
+    ax,
+    charges,
+    x0,
+    y0,
+    h=0.3,
+    method='rk2',
+    direction='withfield',
+    stop_charge=None,
+    stop_radius=0.8,
+    max_steps=4000,
+    bounds=(-25, 25, -25, 25),
+    color='black',
+    linewidth=1.0,
+):
+    x = float(x0)
+    y = float(y0)
+    xmin, xmax, ymin, ymax = bounds
+
+    for _ in range(max_steps):
+        if method == 'euler':
+            next_point = euler_step(charges, x, y, h, direction)
+        else:
+            next_point = rk2_step(charges, x, y, h, direction)
+
+        if next_point is None:
             break
 
-        E_mag = np.hypot(Ex, Ey)
+        x_new, y_new = next_point
+        ax.plot([x, x_new], [y, y_new], color=color, linewidth=linewidth)
 
-        if E_mag == 0:
+        x, y = x_new, y_new
+
+        if stop_charge is not None:
+            if np.hypot(x - stop_charge.x, y - stop_charge.y) < stop_radius:
+                break
+        
+        margin = 50
+        
+        if (
+            x < xmin - 50 or
+            x > xmax + 50 or
+            y < ymin - 50 or
+            y > ymax + 50
+        ):
             break
 
-        ux = Ex / E_mag
-        uy = Ey / E_mag
-
-        if direction == 'againstfield':
-            ux = -ux
-            uy = -uy
-
-        x_new = x + step * ux
-        y_new = y + step * uy
-
-        plt.plot([x, x_new], [y, y_new], color='black', linewidth=1)
-
-        x = x_new
-        y = y_new
-
-        if np.hypot(x - stop_x, y - stop_y) < stop_radius:
-            break
-
-        if x < -25 or x > 25 or y < -25 or y > 25:
-            break
 
 
 def launch_lines_from_charge( charges, source_charge, target_charge, number_of_lines=8, launch_radius=0.8):
@@ -257,8 +282,57 @@ def launch_lines_from_charge( charges, source_charge, target_charge, number_of_l
 
         trace_field_line(charges, x0, y0, target_charge.x, target_charge.y, direction=direction)
 
-### Plot helpers
-## HW1 Part
+def trace_equipotential(
+    ax,
+    charges,
+    x0,
+    y0,
+    h=0.25,
+    max_steps=5000,
+    start_check_steps=20,
+    close_radius=0.4,
+    bounds=(-25, 25, -25, 25),
+    color='orange',
+    linewidth=1.2,
+):
+    x = float(x0)
+    y = float(y0)
+    xmin, xmax, ymin, ymax = bounds
+
+    for step_index in range(max_steps):
+        next_point = rk2_equipotential_step(charges, x, y, h)
+        if next_point is None:
+            break
+
+        x_new, y_new = next_point
+
+        outside = x_new < xmin or x_new > xmax or y_new < ymin or y_new > ymax
+        if outside:
+            # Re-enter from the opposite side without drawing a long artificial line across the plot.
+            x = np.clip(x_new, xmin, xmax)
+            y = np.clip(y_new, ymin, ymax)
+            continue
+
+        ax.plot([x, x_new], [y, y_new], color=color, linewidth=linewidth)
+        x, y = x_new, y_new
+
+        if step_index > start_check_steps and np.hypot(x - x0, y - y0) < close_radius:
+            break
+
+def draw_field_lines(ax, charges, start_points, h=0.3, method='rk2', stop_charge=None, color='black'):
+    for x0, y0, direction in start_points:
+        trace_field_line(
+            ax,
+            charges,
+            x0,
+            y0,
+            h=h,
+            method=method,
+            direction=direction,
+            stop_charge=stop_charge,
+            color=color,
+        )
+
 def plot_potential(charges, xgrid, ygrid, title):
         V = total_potential(charges, xgrid, ygrid)
 
@@ -289,6 +363,11 @@ def plot_potential(charges, xgrid, ygrid, title):
         plt.tight_layout()
         return V
 
+def plot_charges(ax, charges):
+    for charge in charges:
+        color = 'red' if charge.q > 0 else 'blue'
+        ax.scatter(charge.x, charge.y, color=color, s=240, edgecolors='black', zorder=5)
+
 def plot_field_direction_from_potential(charges, xgrid, ygrid, title):
     V = total_potential(charges, xgrid, ygrid)
     Ex, Ey = electric_field_from_potential(V)
@@ -314,8 +393,7 @@ def plot_field_direction_from_potential(charges, xgrid, ygrid, title):
     plt.ylabel('y')
     plt.title(title)
     plt.tight_layout()
-    
-## HW2 Part
+
 def plot_fractional_error(error, title):
     plt.figure(figsize=(7, 6))
     plt.imshow(
@@ -331,165 +409,130 @@ def plot_fractional_error(error, title):
     plt.title(title)
     plt.tight_layout()
 
+def plot_field_lines(charges, start_points, title, h=0.3, method='rk2', stop_charge=None, color='black'):
+    fig, ax = plt.subplots(figsize=(7, 6))
+    draw_field_lines(ax, charges, start_points, h=h, method=method, stop_charge=stop_charge, color=color)
+    plot_charges(ax, charges)
+    setup_axes(ax, title)
+    fig.tight_layout()
 
-def plot_field_lines(charges, positive, negative, start_points, title):
-    plt.figure(figsize=(7, 6))
+# Unit 3 part
+def plot_field_lines_and_equipotentials(dipole, positive, negative):
+    fig, ax = plt.subplots(figsize=(8, 8))
 
-    for start in start_points:
-        start_x = start[0]
-        start_y = start[1]
-        direction = start[2]
-        stop_charge = start[3]
+    start_points = make_start_points_from_charge(
+        positive,
+        number_of_lines=12,
+        launch_radius=0.8,
+        angle_offset=np.pi / 12,
+    )
+    draw_field_lines(ax, dipole, start_points, h=0.25, method='rk2', stop_charge=negative, color='black')
 
-        trace_field_line(
-            charges,
-            start_x,
-            start_y,
-            stop_charge.x,
-            stop_charge.y,
-            direction=direction
-        )
+    levels = np.linspace(-0.25, 0.25, 9)
+    levels = [level for level in levels if abs(level) > 1e-6]
 
-    plt.scatter(positive.x, positive.y, color='red', s=220, edgecolors='black', zorder=5)
+    equipotential_starts = find_equipotential_start_points(
+        dipole,
+        levels,
+        x_min=-6.5,
+        x_max=6.5,
+        y=1.0,
+    )
 
-    plt.scatter(negative.x, negative.y, color='blue', s=220, edgecolors='black', zorder=5)
+    for x0, y0, _ in equipotential_starts:
+        trace_equipotential(ax, dipole, x0=x0, y0=y0, h=0.25, color='orange')
 
-    plt.xlim(-25, 25)
-    plt.ylim(-25, 25)
-    plt.gca().set_aspect('equal')
-    plt.xlabel('x')
-    plt.ylabel('y')
-    plt.title(title)
-    plt.tight_layout()
+    plot_charges(ax, dipole)
+    setup_axes(ax, 'HW4: Field Lines and Equipotentials')
+    fig.tight_layout()
 
-def make_start_points_from_charge(source_charge, target_charge, number_of_lines, launch_radius, angle_offset):
-    start_points = []
+def plot_euler_vs_rk2(dipole, positive, negative, start_points, h, title):
+    fig, ax = plt.subplots(figsize=(7, 6))
 
-    angles = np.linspace(0, 2*np.pi, number_of_lines, endpoint=False)
-    angles = angles + angle_offset
+    draw_field_lines(ax, dipole, start_points, h=h, method='euler', stop_charge=negative, color='gray')
+    draw_field_lines(ax, dipole, start_points, h=h, method='rk2', stop_charge=negative, color='black')
 
-    for theta in angles:
-        x0 = source_charge.x + launch_radius * np.cos(theta)
-        y0 = source_charge.y + launch_radius * np.sin(theta)
+    plot_charges(ax, dipole)
+    setup_axes(ax, title)
+    fig.tight_layout()
 
-        if source_charge.q > 0:
-            direction = 'withfield'
-        else:
-            direction = 'againstfield'
+def plot_one_equipotential(dipole, positive, negative, start_points):
+    fig, ax = plt.subplots(figsize=(8, 8))
 
-        start_points.append((x0, y0, direction, target_charge))
+    draw_field_lines(ax, dipole, start_points, h=0.25, method='rk2', stop_charge=negative, color='black')
+    trace_equipotential(ax, dipole, x0=1, y0=0, h=0.25, color='orange')
 
-    return start_points
+    plot_charges(ax, dipole)
+    setup_axes(ax, 'HW3: One Equipotential')
+    fig.tight_layout()
 
 ### Main
 def main():
 
     # Set up
-    xgrid, ygrid = make_grid()
-
     positive = Charge(-7, 0, +1)
     negative = Charge(7, 0, -1)
-    charges = [positive, negative]
+    dipole = [positive, negative]
 
-    V = total_potential(charges, xgrid, ygrid)
-
-    # HW1
-    my_Ex, my_Ey = my_centered_difference_field(V)
-    np_Ex, np_Ey = electric_field_from_potential(V)
-
-    interior = np.s_[1:-1, 1:-1]
-
-    diff_Ex = np.nanmax(np.abs(my_Ex[interior] - np_Ex[interior]))
-    diff_Ey = np.nanmax(np.abs(my_Ey[interior] - np_Ey[interior]))
-
-    print("HW1: Centered difference compared with np.gradient")
-    print("Maximum difference in Ex:", diff_Ex)
-    print("Maximum difference in Ey:", diff_Ey)
-    print()
-
-    # HW2
-    true_Ex, true_Ey = total_field(charges, xgrid, ygrid)
-
-    error_Ex = fractional_error(my_Ex, true_Ex)
-    error_Ey = fractional_error(my_Ey, true_Ey)
-
-    plot_fractional_error(error_Ex, 'HW2: Fractional Error in Ex')
-    plot_fractional_error(error_Ey, 'HW2: Fractional Error in Ey')
-
-    print("HW2: Fractional error")
-    print("Max fractional error Ex:", np.nanmax(np.abs(error_Ex)))
-    print("Max fractional error Ey:", np.nanmax(np.abs(error_Ey)))
-    print("These errors are much larger than machine precision, about 1e-16.")
-    print()
-
-    # HW3(a)
-    plot_field_lines(
-        charges,
+    start_points = make_start_points_from_charge(
         positive,
-        negative,
-        start_points=[
-            (positive.x + 0.8, positive.y, 'withfield', negative)
-        ],
-        title='HW3(a): Line from Positive Charge Toward Negative Charge'
-    )
-
-    # HW3(b)
-    plot_field_lines(
-        charges,
-        positive,
-        negative,
-        start_points=[
-            (negative.x - 0.8, negative.y, 'againstfield', positive)
-        ],
-        title='HW3(b): Line from Negative Charge Toward Positive Charge'
-    )
-
-    # HW3(c)
-    plot_field_lines(
-        charges,
-        positive,
-        negative,
-        start_points=[
-            (positive.x, positive.y + 0.8, 'withfield', negative)
-        ],
-        title='HW3(c): Line from Positive Charge Perpendicular to Dipole Axis'
-    )   
-
-    # HW3(d)
-
-    # Field lines are geometric curves that show the direction of the electric field, while the 
-    # trajectory of a charged particle is determined by Newton’s law F=qE=ma and depends on the 
-    # particle’s mass, charge, and initial velocity, so a particle does not generally move along 
-    # a field line.
-
-
-    # HW4
-    # Positive charge
-    positive_start_points = make_start_points_from_charge(
-        source_charge=positive,
-        target_charge=negative,
         number_of_lines=8,
         launch_radius=0.8,
-        angle_offset=np.pi / 8
+        angle_offset=np.pi / 8,
     )
+    # HW1(a), HW1(b): Euler vs RK2
+    plot_euler_vs_rk2(dipole, positive, negative, start_points, h=0.5,
+                      title='HW1(a): Euler Gray vs RK2 Black, h = 0.5')
+    plot_euler_vs_rk2(dipole, positive, negative, start_points, h=0.1,
+                      title='HW1(b): Euler Gray vs RK2 Black, h = 0.1')
 
-    # Negative charge
-    negative_start_points = [
-        (negative.x + 0.8, negative.y + 0.4, 'againstfield', positive),
-        (negative.x + 0.8, negative.y - 0.4, 'againstfield', positive),
-    ]
+    # HW2(a): single positive charge
+    single_positive = [Charge(0, 0, +1)]
+    start_single = make_start_points_from_charge(single_positive[0], number_of_lines=12, launch_radius=0.8)
+    plot_field_lines(single_positive, start_single, title='HW2(a): Single Positive Charge',
+                     h=0.3, method='rk2', stop_charge=None, color='black')
 
-    start_points_hw4 = positive_start_points + negative_start_points
-
-    plot_field_lines(
-        charges,
-        positive,
-        negative,
-        start_points=start_points_hw4,
-        title='HW4: Dipole Field Lines'
+    # HW2(b): two positive charges
+    pos1 = Charge(-7, 0, +1)
+    pos2 = Charge(7, 0, +1)
+    two_positive = [pos1, pos2]
+    start_two_positive = (
+        make_start_points_from_charge(pos1, number_of_lines=8, launch_radius=0.8)
+        + make_start_points_from_charge(pos2, number_of_lines=8, launch_radius=0.8)
     )
+    plot_field_lines(two_positive, start_two_positive, title='HW2(b): Two Positive Charges',
+                     h=0.3, method='rk2', stop_charge=None, color='black')
+
+    # HW2(c): two positive charges and one negative charge
+    p1 = Charge(-7, 0, +1)
+    p2 = Charge(7, 0, +1)
+    n1 = Charge(0, 8, -1)
+    mixed = [p1, p2, n1]
+    start_mixed = (
+        make_start_points_from_charge(p1, number_of_lines=8, launch_radius=0.8)
+        + make_start_points_from_charge(p2, number_of_lines=8, launch_radius=0.8)
+    )
+    plot_field_lines(mixed, start_mixed, title='HW2(c): Two Positive Charges and One Negative Charge',
+                     h=0.3, method='rk2', stop_charge=n1, color='black')
+
+    # HW3, HW4
+    plot_one_equipotential(dipole, positive, negative, start_points)
+    plot_field_lines_and_equipotentials(dipole, positive, negative)
+
+    print('HW1(c):')
+    print('For h = 0.5, Euler and RK2 visibly differ. RK2 follows the curved field lines more accurately.')
+    print('For h = 0.1, Euler improves, but RK2 still gives better accuracy for similar visual smoothness.')
+    print('This confirms that RK2 has better accuracy than Euler without simply using many smaller steps.')
+    print()
+
+    print('HW2 verification:')
+    print('A single positive charge produces field lines going radially outward to infinity.')
+    print('Two positive charges produce lines going outward, bending away from the region between the charges.')
+    print('Two positive charges with one negative charge produce some lines ending on the negative charge and others going to infinity.')
 
     plt.show()
+
+
 
 if __name__ == "__main__":
     main()
