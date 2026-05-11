@@ -226,16 +226,21 @@ def trace_field_line(
     direction='withfield',
     stop_charge=None,
     stop_radius=0.8,
-    max_steps=4000,
+    max_steps=6000,
     bounds=(-25, 25, -25, 25),
     color='black',
     linewidth=1.0,
 ):
     x = float(x0)
     y = float(y0)
-    xmin, xmax, ymin, ymax = bounds
+
+    xs = [x]
+    ys = [y]
+
+    far_limit = 200   # 不要设 1000，太容易爆内存
 
     for _ in range(max_steps):
+
         if method == 'euler':
             next_point = euler_step(charges, x, y, h, direction)
         else:
@@ -245,25 +250,21 @@ def trace_field_line(
             break
 
         x_new, y_new = next_point
-        ax.plot([x, x_new], [y, y_new], color=color, linewidth=linewidth)
+
+        xs.append(x_new)
+        ys.append(y_new)
 
         x, y = x_new, y_new
 
         if stop_charge is not None:
             if np.hypot(x - stop_charge.x, y - stop_charge.y) < stop_radius:
                 break
-        
-        margin = 50
-        
-        if (
-            x < xmin - 50 or
-            x > xmax + 50 or
-            y < ymin - 50 or
-            y > ymax + 50
-        ):
+
+        if abs(x) > far_limit or abs(y) > far_limit:
             break
 
-
+    # 一整条线只画一次
+    ax.plot(xs, ys, color=color, linewidth=linewidth, clip_on=True)
 
 def launch_lines_from_charge( charges, source_charge, target_charge, number_of_lines=8, launch_radius=0.8):
     angles = np.linspace(0, 2*np.pi, number_of_lines, endpoint=False)
@@ -289,8 +290,8 @@ def trace_equipotential(
     y0,
     h=0.25,
     max_steps=5000,
-    start_check_steps=20,
-    close_radius=0.4,
+    start_check_steps=100,
+    close_radius=0.15,
     bounds=(-25, 25, -25, 25),
     color='orange',
     linewidth=1.2,
@@ -422,14 +423,13 @@ def plot_field_lines_and_equipotentials(dipole, positive, negative):
 
     start_points = make_start_points_from_charge(
         positive,
-        number_of_lines=12,
+        number_of_lines=8,
         launch_radius=0.8,
-        angle_offset=np.pi / 12,
+        angle_offset=np.pi / 8,
     )
     draw_field_lines(ax, dipole, start_points, h=0.25, method='rk2', stop_charge=negative, color='black')
 
-    levels = np.linspace(-0.25, 0.25, 9)
-    levels = [level for level in levels if abs(level) > 1e-6]
+    levels = [-0.12, -0.08, -0.05, 0.05, 0.08, 0.12]
 
     equipotential_starts = find_equipotential_start_points(
         dipole,
@@ -497,8 +497,18 @@ def main():
     pos2 = Charge(7, 0, +1)
     two_positive = [pos1, pos2]
     start_two_positive = (
-        make_start_points_from_charge(pos1, number_of_lines=8, launch_radius=0.8)
-        + make_start_points_from_charge(pos2, number_of_lines=8, launch_radius=0.8)
+        make_start_points_from_charge(
+            pos1,
+            number_of_lines=8,
+            launch_radius=0.8,
+            angle_offset=np.pi / 8
+        )
+        + make_start_points_from_charge(
+            pos2,
+            number_of_lines=8,
+            launch_radius=0.8,
+            angle_offset=np.pi / 8
+        )
     )
     plot_field_lines(two_positive, start_two_positive, title='HW2(b): Two Positive Charges',
                      h=0.3, method='rk2', stop_charge=None, color='black')
