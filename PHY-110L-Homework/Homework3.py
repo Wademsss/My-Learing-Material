@@ -1,11 +1,12 @@
-# PHY 110L Homework 2
+# PHY 110L Homework 3
 # Yucheng Liu
 # 919908992
 # AI clarifies: In this project, GitHub Colpiolt was used as a code completion tool.
+
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Grid setup
+### Grid setup
 def make_grid(n=51, xmin=-25, xmax=25, ymin=-25, ymax=25):
     coords = np.mgrid[ymin:ymax+1, xmin:xmax+1]
     ygrid = coords[0, :, :]
@@ -13,8 +14,7 @@ def make_grid(n=51, xmin=-25, xmax=25, ymin=-25, ymax=25):
     return xgrid, ygrid
 
 
-
-# Charge class
+### Charge class
 class Charge:
     def __init__(self, x, y, q):
         self.x = x
@@ -31,18 +31,22 @@ class Charge:
         dx = x - self.x
         dy = y - self.y
         r = np.hypot(dx, dy)
+
         with np.errstate(divide="ignore", invalid="ignore"):
             Ex = self.q * dx / (r ** 3)
             Ey = self.q * dy / (r ** 3)
+
         return Ex, Ey
 
-# Physics helpers
+### Physics helpers
 
-# HW1 Part
+## HW1 Part
 def total_potential(charges, xgrid, ygrid):
     Vtotal = np.zeros_like(xgrid, dtype=float)
+
     for c in charges:
         Vtotal += c.potential(xgrid, ygrid)
+
     return Vtotal
 
 def finite_contour_levels(V, num_levels=10):
@@ -70,7 +74,7 @@ def field_direction_degrees(Ex, Ey):
     theta = (theta + 360) % 360
     return theta
 
-# HW2 Part
+## HW2 Part
 def total_field(charges, x, y):
     Ex_total = 0
     Ey_total = 0
@@ -112,7 +116,93 @@ def fractional_error(approx, true):
 
     return error
 
-# Field line helpers
+## HW3 Part
+def unit_field(charges, x, y):
+    Ex, Ey = total_field(charges, x, y)
+    mag = np.hypot(Ex, Ey)
+
+    if mag == 0 or not np.isfinite(mag):
+        return None
+
+    return Ex / mag, Ey / mag
+
+
+def unit_equipotential_direction(charges, x, y):
+    direction = unit_field(charges, x, y)
+
+    if direction is None:
+        return None
+
+    ux, uy = direction
+
+    # Rotate E direction by 90 degrees
+    return -uy, ux
+
+# Euler and RK2 steps
+def euler_step(charges, x, y, h, direction='withfield'):
+    direction_vector = unit_field(charges, x, y)
+
+    if direction_vector is None:
+        return None
+
+    ux, uy = direction_vector
+
+    if direction == 'againstfield':
+        ux = -ux
+        uy = -uy
+
+    return x + h * ux, y + h * uy
+
+def rk2_step(charges, x, y, h, direction='withfield'):
+    direction_vector = unit_field(charges, x, y)
+
+    if direction_vector is None:
+        return None
+
+    ux1, uy1 = direction_vector
+
+    if direction == 'againstfield':
+        ux1 = -ux1
+        uy1 = -uy1
+
+    # Midpoint
+    xm = x + 0.5 * h * ux1
+    ym = y + 0.5 * h * uy1
+
+    mid_direction = unit_field(charges, xm, ym)
+
+    if mid_direction is None:
+        return None
+
+    ux2, uy2 = mid_direction
+
+    if direction == 'againstfield':
+        ux2 = -ux2
+        uy2 = -uy2
+
+    return x + h * ux2, y + h * uy2
+
+def rk2_equipotential_step(charges, x, y, h):
+    direction_vector = unit_equipotential_direction(charges, x, y)
+
+    if direction_vector is None:
+        return None
+
+    ux1, uy1 = direction_vector
+
+    xm = x + 0.5 * h * ux1
+    ym = y + 0.5 * h * uy1
+
+    mid_direction = unit_equipotential_direction(charges, xm, ym)
+
+    if mid_direction is None:
+        return None
+
+    ux2, uy2 = mid_direction
+
+    return x + h * ux2, y + h * uy2
+
+### Field line helpers
 def trace_field_line(charges, x0, y0, stop_x, stop_y, step=0.35, stop_radius=0.8, max_steps=3000, direction='withfield'):
     x = x0
     y = y0
@@ -167,8 +257,8 @@ def launch_lines_from_charge( charges, source_charge, target_charge, number_of_l
 
         trace_field_line(charges, x0, y0, target_charge.x, target_charge.y, direction=direction)
 
-# Plot helpers
-# HW1 Part
+### Plot helpers
+## HW1 Part
 def plot_potential(charges, xgrid, ygrid, title):
         V = total_potential(charges, xgrid, ygrid)
 
@@ -225,7 +315,7 @@ def plot_field_direction_from_potential(charges, xgrid, ygrid, title):
     plt.title(title)
     plt.tight_layout()
     
-# HW2 Part
+## HW2 Part
 def plot_fractional_error(error, title):
     plt.figure(figsize=(7, 6))
     plt.imshow(
@@ -291,7 +381,7 @@ def make_start_points_from_charge(source_charge, target_charge, number_of_lines,
 
     return start_points
 
-# Main
+### Main
 def main():
 
     # Set up
