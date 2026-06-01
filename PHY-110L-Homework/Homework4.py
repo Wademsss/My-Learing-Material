@@ -232,7 +232,7 @@ def run_hw2():
             "iterations =", iterations,
             "pixel-iterations =", work_estimate
         )
-
+# Manba Out
 
 def run_hw3():
     R = 25
